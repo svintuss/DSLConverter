@@ -21,7 +21,7 @@ import subprocess
 
 
 tidylib.BASE_OPTIONS = {
-    "output-xml" : 0,
+    "output-xml" : 0, 
     "input-xml" : 0,
     "show-warnings" : 0,
     "quote-marks" : 0,
@@ -127,6 +127,9 @@ russian_noIndexList = [
     'но',
     'и',
     'или'
+    ]
+
+german_noIndexList = [
     ]
 
 # Open and create dictionary files
@@ -670,6 +673,10 @@ def processDSLstring(thisString):
                 
     
 
+
+def remove_DSLmarkup_new(this_text, p): # hope this will work in the same way as the function below
+    this_text = re.sub('(?<!\)\[.*?\]', '', this_text)
+
 def remove_DSLmarkup(this_text, p):
     copy_flag = 'true'
     clean_text = ''
@@ -766,11 +773,6 @@ def clean_Title(this_text):
             clean_text = clean_text + this_char
     
     return clean_text
- 
-def remove_accents(input_str):
-    nkfd_form = unicodedata.normalize('NFKD', input_str)
-    return u"".join([c for c in nkfd_form if not unicodedata.combining(c)])        
-    
 
 
 # Main converter function
@@ -787,7 +789,9 @@ for i in range(stringCount):
         nextString = '' 
         
                
-    thisString = re.sub('<', '〈', thisString)
+    thisString = re.sub('<<', '[ref]', thisString) # make '<<' and '>>' ref tags
+    thisString = re.sub('>>', '[/ref]', thisString)
+    thisString = re.sub('<', '〈', thisString) # replace remaining < and > with XML-save symbols
     thisString = re.sub('>', '〉', thisString)
     thisString = thisString.replace('\\(', '(')
     thisString = thisString.replace('\\)', ')')
