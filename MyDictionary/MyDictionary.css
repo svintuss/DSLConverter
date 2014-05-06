@@ -1,0 +1,16 @@
+@charset "UTF-8";
+@namespace d url(http://www.apple.com/DTDs/DictionaryService-1.0.rng);
+
+div.title {font-size:x-large;font-weight:normal;margin:0px 0 0px 0; padding-bottom:5px;}
+div.label {font-size:x-large;font-weight:normal;margin:0px 0 0px 0; padding-bottom:5px;text-align: center}
+div.L0 {font-weight:normal;margin:0px 0 0px 0; padding-top:5px;}
+div.authors {font-weight:normal;margin:0px 0 0px 0px;text-align: center}
+div.copyright {font-weight:normal;margin:0px 0 0px 0px;text-align: center}
+div.description {font-weight:normal;margin:0px 0 0px 19px;padding-bottom:5px}
+div.L1 {font-weight:normal;margin:0px 0 0px 19px}
+div.L2 {font-weight:normal;margin:0px 0 0px 38px}
+div.L3 {font-weight:normal;margin:0px 0 0px 57px}
+div.L4 {font-weight:normal;margin:0px 0 0px 78px}
+span.transcription {font-family: 'Lucida Grande'; font-weight:100; font-size: smaller}
+font.mark {color:green; font-style:italic}
+em.accent {color:#880000; font-style:normal}

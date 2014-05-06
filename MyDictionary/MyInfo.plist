@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>English</string>
+	<key>CFBundleIdentifier</key>
+	<string>ru.ABBYY.Lingvo.__DictionaryName__</string>
+	<key>CFBundleDisplayName</key>
+	<string>__DictionaryTitle__</string>
+	<key>CFBundleName</key>
+	<string>__DictionaryName__</string>
+	<key>CFBundleShortVersionString</key>
+	<string>1.0</string>
+	<key>DCSDictionaryCopyright</key>
+	<string>__DictionaryName__</string>
+	<key>DCSDictionaryManufacturerName</key>
+	<string>$MANUFACTURER$</string>
+	<key>DCSDictionaryFrontMatterReferenceID</key>
+	<string>front_back_matter</string>
+</dict>
+</plist>
