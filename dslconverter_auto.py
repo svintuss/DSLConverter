@@ -32,7 +32,7 @@ tidylib.BASE_OPTIONS = {
     "uppercase-attributes" : 0,
     "char-encoding" : "utf8",
     "new-pre-tags" : "div, font",
-    "new-blocklevel-tags" : "d:entry, d:index, d:dictionary, embed",
+    "new-blocklevel-tags" : "d:entry, d:index, d:dictionary, d:priority, embed",
     "drop-proprietary-attributes" : 0,
     "wrap" : 0,
     "merge-divs" : 1,
@@ -126,10 +126,59 @@ russian_noIndexList = [
     'а',
     'но',
     'и',
-    'или'
+    'или',
+    'о',
+    'об'
     ]
 
 german_noIndexList = [
+    'in',
+    'auf',
+    'unter',
+    'über',
+    'aus',
+    'neben',
+    'zwishen',
+    'an',
+    'von',
+    'vor',
+    'hinter',
+    'gegen',
+    'durch',
+    'hinauf',
+    'hinunter',
+    'gegenüber',
+    'mit',
+    'ohne',
+    'ich',
+    'mir',
+    'mich',
+    'du',
+    'dir',
+    'dich',
+    'er',
+    'ihm',
+    'ihn',
+    'sie',
+    'ihr'
+    'es',
+    'wir',
+    'uns',
+    'ihr',
+    'euch',
+    'sie',   
+    'ihnen'
+    ]
+
+czech_noIndexList = [
+    'na',
+    'a',
+    'se',
+    'ne',
+    's',
+    'pro',
+    'si',
+    's'
     ]
 
 # Open and create dictionary files
@@ -165,14 +214,15 @@ except FileNotFoundError:
     
 try:
     annotationFile = open(re.sub('.dsl', '.ann', sys.argv[1]), 'r', encoding='utf-16le')
-    annotationContents = annotationFile.read().replace(u'\ufeff', '')  #.encode('utf-8')
+    annotationContents = annotationFile.read().replace(u'\ufeff', '')  # remove unicode characters
     annotationList = annotationContents.splitlines()
 except FileNotFoundError:
     annotationList = ''
     
 
-dictionaryContents = dictionaryFile.read().replace(u'\ufeff', '') #.encode('utf-8')
-dictionaryList = dictionaryContents.splitlines() # convert dictionary from UTF-16 to UTF-8 and to an array  of lines
+dictionaryContents = dictionaryFile.read().replace(u'\ufeff', '') # remove unicode characters
+dictionaryList = dictionaryContents.splitlines() # convert dictionary to an array  of lines
+
 
 
 
@@ -545,9 +595,9 @@ def processDSLTag(myTag, myString):
                 "<font color=\"#7F7F7F\" id=\"", "</font>", 
                 "", "", 
                 "", "", 
-                "&#160;<embed  height=\"16\" width=\"16\" autoplay=\"false\" src=\"media/", 
-                "<img src=\"media/",
-                "\" />", 
+                "<span d:priority=\"2\">&#160;<embed  height=\"16\" width=\"16\" autoplay=\"false\" src=\"media/", 
+                "<span><img src=\"media/",
+                "\" /></span>", 
                 "<a href=\"", "</a>", 
                 "<font class=\"mark\" title=\"", "</font>", 
                 "<em class=\"accent\">", "</em>", 
@@ -601,7 +651,7 @@ def processDSLTag(myTag, myString):
                 encodedTagID = urllib.parse.quote_plus(tagTitle) #encode_text(tagTitle, true, false)
 
                 outputTag = outputTag + encodedTagID + '">'
-                gIndexStrings = gIndexStrings + '	<d:index d:value="' + tagTitle  + '" d:title="' + tagTitle + '"  d:anchor="xpointer(//*[@id=\'' + encodedTagID + '\'])"/>' + "\n"        
+                gIndexStrings = gIndexStrings + '	<d:index d:value="' + tagTitle  + '" d:title="' + tagTitle + '"  d:anchor="xpointer(//*[@id=\'' + encodedTagID + '\'])" d:priority="2" />' + "\n"        
         elif myTag == "[/ex]":
             gEX = ''
         
@@ -759,8 +809,11 @@ def spell(this_word): #modify this function so that it handles "-" and "'" well
     returnwordforms = list(set(returnwordforms))     
 
     return returnwordforms
-    
+
 def clean_Title(this_text):
+    return re.sub('\{.*?\}', '', this_text)
+    
+def clean_Title_old(this_text):
     copy_flag = 'true'
     clean_text = ''
     
@@ -777,6 +830,11 @@ def clean_Title(this_text):
 
 # Main converter function
 
+dictionaryEntriesList = []
+for i in dictionaryList:
+    if not i.startswith('#') and not i.startswith('\t'):
+        i = clean_Title(i)
+        dictionaryEntriesList.append(i)
 
 stringCount = len(dictionaryList)
 
@@ -824,6 +882,10 @@ for i in range(stringCount):
                     gNoIndexList = french_noIndexList
                 elif dictionaryLanguage.lower() == 'italian':
                     gNoIndexList = italian_noIndexList
+                elif dictionaryLanguage.lower() == 'german':
+                    gNoIndexList = german_noIndexList
+                elif dictionaryLanguage.lower() == 'czech':
+                    gNoIndexList = czech_noIndexList 
                 else:
                     gNoIndexList = []
             
@@ -837,23 +899,25 @@ for i in range(stringCount):
             if thisString == '':
                 continue
             
+
+            if (nextString.startswith('	[m') or nextString == '' or not nextString.startswith('	')) and not thisString.endswith('[/m]') and thisString.startswith('[m'):
+                thisString = thisString + '[/m]'
+            
             if nextString.startswith('	'):
                 nextString = nextString[1:]
-            if (nextString.startswith('[m') or nextString == '' ) and not thisString.endswith('[/m]') and thisString.startswith('[m'):
-                thisString = thisString + '[/m]'
-
-            tempString = processDSLstring(thisString)
-                
+            
+            
+            tempString = processDSLstring(thisString)    
                         
             if (gM == '' and not thisString.endswith("[/m]")): # if this is a main line without opening and closing m tags add Div Class 0
-                tempString = "		<div class=\"L0\">" + tempString + "</div>\n"
+                tempString = "		<div class=\"L0\">" + tempString + "</div>"
 
             if thisString.endswith("[/m]"):
                 gM = ''
                 
            
-            tempString, errors = tidy_document(tempString)                       
-            
+            tempString, errors = tidy_document(tempString)
+                        
             tempString = re.sub('> <', '>&#160;<', tempString) 
             tempString = re.sub('.wav">', '.mp3" />', tempString) # replace links to .wav files and make proper closing tags TRY TO REWRITE THIS THROUGH MODIFYING TIDY PROPERTIES 
             tempString = re.sub('.jpg">', '.jpg" />', tempString) 
@@ -867,13 +931,26 @@ for i in range(stringCount):
     
         elif thisString[:1] != '	':
             if gEntryTitle != '': # tidy and write previous entry to file
+                entryContents = re.sub('\n', '', entryContents)
+                entryContents = re.sub("\\]", "]", entryContents)
+                entryContents = re.sub("\\[", "[", entryContents)
+                entryContents = re.sub('(\s+?)\)', ') ', entryContents)
+                entryContents = re.sub('\((\s+?)', ' (', entryContents)                       
+                entryContents = re.sub(' \]', '] ', entryContents)
+                entryContents = re.sub('\[ ', ' [', entryContents)
                 
-                XMLfile.write(titleString + gIndexStrings + '		<div class=\"title\">' + processDSLstring(gEntryHeader) + '</div>' + entryContents + '</d:entry>\n')
+                XMLfile.write(titleString + gIndexStrings + '	<div d:priority="2" class=\"title\">' + processDSLstring(gEntryHeader) + '</div>' + entryContents + '</d:entry>\n')
                 
             entryContents = ''
-            gEntryHeader = re.sub('[{}]', '', thisString)
-            gEntryTitle = re.sub('{(.*?)}', '', thisString) # clean_Title(thisString)
+            gEntryHeader = re.sub('[{}]', '', thisString) # this one shows up as an entry header
+            gEntryHeader = re.sub('(\s+?)\)', ') ', gEntryHeader)
+            gEntryHeader = re.sub('\((\s+?)', ' (', gEntryHeader)                       
+            gEntryHeader = re.sub(' \]', '] ', gEntryHeader)
+            gEntryHeader = re.sub('\[ ', ' [', gEntryHeader)
+                        
+            gEntryTitle = re.sub('{(.*?)}', '', thisString) # this one is the value displayed in window header and search list
             gEntryTitle = re.sub('^\.\.\.', '', gEntryTitle)
+            numberOfWords = len(gEntryTitle.split())
 
             if gEntryTitle in gEntriesList:
                 EntryTitle = gEntryTitle + '_1'
@@ -885,18 +962,28 @@ for i in range(stringCount):
             EntryNameForms = spell(gEntryTitle)
             if EntryNameForms != '':
                 gIndexStrings = ''
-                for i in EntryNameForms:
-                    gIndexStrings = gIndexStrings + '	<d:index d:value=\"' + re.sub('"', '', i) + '\" d:title=\"' + re.sub('"', '', gEntryTitle) + '\"/>\n'
+                if numberOfWords == 1:
+                    for i in EntryNameForms:
+                        if i == gEntryTitle:
+                            gIndexStrings = gIndexStrings + '	<d:index d:value=\"' + re.sub('"', '', i) + '\" d:title=\"' + re.sub('"', '', gEntryTitle) + '\"/>\n'                            
+                        elif i not in dictionaryEntriesList:
+                            gIndexStrings = gIndexStrings + '	<d:index d:value=\"' + re.sub('"', '', i) + '\" d:title=\"' + re.sub('"', '', gEntryTitle) + '\"/>\n'
+                        else:
+                            gIndexStrings = gIndexStrings + '	<d:index d:value=\"' + re.sub('"', '', i) + '\" d:title=\"' + re.sub('"', '', gEntryTitle) + '\" d:priority="2" />\n'                            
+                else:
+                    for i in EntryNameForms:
+                        if i == gEntryTitle:
+                            gIndexStrings = gIndexStrings + '	<d:index d:value="' + re.sub('"', '', i) + '" d:title="' + re.sub('"', '', gEntryTitle) + '" />\n' 
+                        else:
+                            gIndexStrings = gIndexStrings + '	<d:index d:value="' + re.sub('"', '', i) + '" d:title="' + re.sub('"', '', gEntryTitle) + '" d:priority="2" />\n'                    
             else:
                 gIndexStrings = '	<d:index d:value=\"' + re.sub('"', '', gEntryTitle) + '\" d:title=\"' + re.sub('"', '%22', gEntryTitle) + '\"/>' + '\n'
     
-    entryContents = re.sub("\\]", "]", entryContents)
-    entryContents = re.sub("\\[", "[", entryContents)
 
 if entryContents == '':
     XMLfile.write('\n</d:dictionary>')
 else:
-    XMLfile.write(titleString + gIndexStrings + "		<div class=\"title\">" + gEntryTitle + "</div>" + entryContents + "\n</d:entry>\n" + "\n</d:dictionary>")
+    XMLfile.write(titleString + gIndexStrings + "		<div d:priority=\"2\" class=\"title\">" + gEntryTitle + "</div>" + entryContents + "\n</d:entry>\n" + "\n</d:dictionary>")
 
 makefileContents = open(os.path.dirname(os.path.realpath(sys.argv[0])) + '/MyDictionary/Makefile', 'r', encoding='utf-8').read()
 makefileContents = re.sub('__DictionaryName__', dictionaryName, makefileContents)
@@ -912,19 +999,5 @@ shutil.copy2(os.path.dirname(os.path.realpath(sys.argv[0])) + '/MyDictionary/pad
 if not os.path.exists(outputDictionaryPath + '/OtherResources'):
     shutil.copytree(os.path.dirname(os.path.realpath(sys.argv[0])) + '/MyDictionary/OtherResources', outputDictionaryPath + '/OtherResources')
 
-#if sys.argv[2] == 'make':
-#    print('Making OSX dictionary file...')
-#    os.popen("make -C " + shellquote(outputDictionaryPath) + " -f " + shellquote(outputDictionaryPath + '/Makefile'))
-#    cwd = os.getcwd()
-#    print(cwd)
-#    try:
-#        os.chdir(outputDictionaryPath)
-#        print(os.getcwd())
-#        subprocess.call(['make', 'all', '-w', '-f', outputDictionaryPath + '/Makefile'], shell=False)
-#    finally:
-#        os.chdir(cwd)
-#    
-#    print(cwd)
-#    s
 
 print('Done.')
